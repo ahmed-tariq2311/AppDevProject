@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1034519442445",
+    "project_id": "creditrack-5d338",
+    "storage_bucket": "creditrack-5d338.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1034519442445:android:1ba362c46477fc94f09144",
+        "android_client_info": {
+          "package_name": "com.example.creditrack"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAcgwgaEJ8a04VpGa8-3Cxi7sprjzHhEAc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
