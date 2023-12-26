@@ -1,23 +1,31 @@
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:creditrack/animation/FadeAnimation.dart';
 import 'package:creditrack/login.dart';
 import 'package:creditrack/firebase_options.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+
+final authenticationProvider = StateProvider<bool>((ref) => false);
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: HomePage(),
-  ));
-}
+ 
+  runApp(
+    ProviderScope(
+      child: MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: HomePage(),
+      ),
+    ),
+  );
+} 
 
 class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       body: SafeArea(
         child: Container(
@@ -43,10 +51,10 @@ class HomePage extends StatelessWidget {
                   FadeAnimation(
                       1.2,
                       Text(
-                        "Automatic identity verification which enables you to verify your identity",
+                        "Drive Up Your Deals: Credit tracking on autopilot.",
                         textAlign: TextAlign.center,
                         style: TextStyle(color: Colors.grey[700], fontSize: 15),
-                      )),
+                      )), 
                 ],
               ),
               FadeAnimation(
@@ -78,7 +86,8 @@ class HomePage extends StatelessWidget {
                           style: TextStyle(
                               fontWeight: FontWeight.w600, fontSize: 18),
                         ),
-                      )),
+                      )
+                      ),
                   SizedBox(
                     height: 30,
                   ),
