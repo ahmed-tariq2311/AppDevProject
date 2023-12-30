@@ -1,5 +1,6 @@
 import 'package:creditrack/Views/add_sale_screen.dart';
 import 'package:creditrack/Views/dashboard_screen.dart';
+import 'package:creditrack/Views/notification_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -41,7 +42,12 @@ class SalesHistoryScreen extends ConsumerWidget {
               color: Color.fromARGB(255, 204, 201, 9),
             ),
             iconSize: 30.0,
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => DueRecordsScreen()),
+              );
+            },
           ),
         ),
         actions: [
@@ -215,7 +221,7 @@ class SalesHistoryScreen extends ConsumerWidget {
       salesController.confirmationDialog(context, documentId);
     }
 
-    void showBottomSheet(SaleRecord saleData, String documentId) {
+    void _showBottomSheet(SaleRecord saleData, String documentId) {
       showModalBottomSheet(
         context: context,
         isScrollControlled: true, // Set to true for full-height modal
@@ -299,7 +305,7 @@ class SalesHistoryScreen extends ConsumerWidget {
                           onPressed: () {
                             _showDeleteConfirmationDialog(
                                 ref, context, documentId);
-                            _buildSaleRecordItem(saleData, documentId,context);
+                            _buildSaleRecordItem(saleData, documentId, context);
                           },
                           color: Colors.redAccent,
                           elevation: 0,
@@ -327,7 +333,7 @@ class SalesHistoryScreen extends ConsumerWidget {
                               saleData.selectedInstallments,
                               saleData.dueDate,
                             );
-                            _buildSaleRecordItem(saleData, documentId,context);
+                            _buildSaleRecordItem(saleData, documentId, context);
                           },
                           color: Colors.greenAccent,
                           elevation: 0,
@@ -404,12 +410,10 @@ class SalesHistoryScreen extends ConsumerWidget {
       MaterialPageRoute(builder: (context) => LoginPage()),
     );
   }
+} ///////////////////////
 
-  
-
-}///////////////////////
-
-Widget _buildSaleRecordItem(SaleRecord saleData, String documentId, BuildContext context) {
+Widget _buildSaleRecordItem(
+    SaleRecord saleData, String documentId, BuildContext context) {
   // Parse the dueDate from the saleData
   Timestamp dueDate = saleData.dueDate;
   // Convert Timestamp objects to DateTime objects
@@ -452,7 +456,7 @@ Widget _buildSaleRecordItem(SaleRecord saleData, String documentId, BuildContext
 
   return InkWell(
     onTap: () {
-      showBottomSheet(saleData, documentId);
+      _showBottomSheet(context, saleData, documentId);
     },
     child: Container(
       margin: EdgeInsets.all(10.0),
@@ -533,6 +537,8 @@ Widget _buildSaleRecordItem(SaleRecord saleData, String documentId, BuildContext
   );
 }
 
+void _showBottomSheet(
+    BuildContext context, SaleRecord saleData, String documentId) {}
 
 Widget buildSearchBar(WidgetRef ref) {
   return Padding(
@@ -552,7 +558,3 @@ Widget buildSearchBar(WidgetRef ref) {
     ),
   );
 }
-
-
-
-
