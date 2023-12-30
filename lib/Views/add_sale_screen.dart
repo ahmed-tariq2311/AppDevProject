@@ -215,14 +215,14 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                   ],
                 ),
               ),
-              buildStyledContainer(
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-        // Call the submitForm method from the controller
-        saleFormController.submitForm(
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Call the submitForm method from the controller
+          saleFormController.submitForm(
             context: context,
             customerNameController: customerNameController,
             phoneNumberController: phoneNumberController,
@@ -239,21 +239,12 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
             remainingController: RemainingController,
             installmentAmountController: InstallmentAmountController,
             selectedInstallments: selectedInstallments,
-        );
-      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Color.fromARGB(
-                            255, 255, 217, 0), // Set the button color to golden
-                      ),
-                      child: Text('Submit'),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+          );
+        },
+        backgroundColor: Color.fromARGB(255, 255, 217, 0),
+        child: Text('Submit'),
       ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: buildBottomNavigationBar(context),
     );
   }

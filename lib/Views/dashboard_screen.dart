@@ -1,20 +1,24 @@
 import 'package:creditrack/Views/add_sale_screen.dart';
 import 'package:creditrack/Views/sales_history_screen.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../Controllers/dashboard_controller.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
+import 'package:creditrack/Utils/dashboard_provider.dart';
 
-class DashboardScreen extends StatefulWidget {
+class DashboardScreen extends ConsumerWidget {
   @override
-  _DashboardScreenState createState() => _DashboardScreenState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Listen to providers
+    final totalCarsSold = ref.watch(totalCarSoldProvider);
+    final paymentRemainingSum = ref.watch(paymentRemainingSumProvider);
+    final totalProfit = ref.watch(totalProfitProvider);
+    final statusSum = ref.watch(statusSumProvider);
+    final dayAndDownPaymentData = ref.watch(dayAndDownPaymentDataProvider);
+    final revenueList = ref.watch(revenueListProvider);
+    final months = ref.watch(next5monthsprovider);
 
-class _DashboardScreenState extends State<DashboardScreen> {
-  final FirestoreHelper firestoreHelper = FirestoreHelper();
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Color.fromARGB(255, 145, 207, 236),
       appBar: AppBar(
@@ -59,49 +63,55 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                   children: [
-                    FutureBuilder<int>(
-                      future: firestoreHelper.getTotalCarSold(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return _buildCard('Total Car Sold', 'Loading...');
-                        }
-                        if (snapshot.hasError) {
-                          return _buildCard('Total Car Sold', 'Error');
-                        }
-
-                        int totalCarSold = snapshot.data ?? 0;
-                        return _buildCard('Total Car Sold', '$totalCarSold');
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final totalCarsSoldAsyncValue =
+                            ref.watch(totalCarSoldProvider);
+                        return Card(
+                          elevation: 5,
+                          child: totalCarsSoldAsyncValue.when(
+                            data: (data) =>
+                                _buildCard('Total Car Sold', data.toString()),
+                            loading: () =>
+                                _buildCard('Total Car Sold', 'Loading...'),
+                            error: (error, stack) =>
+                                _buildCard('Total Car Sold', 'Error: $error'),
+                          ),
+                        );
                       },
                     ),
-                    FutureBuilder<num>(
-                      future: firestoreHelper.getPaymentRemainingSum(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return _buildCard('Revenue Generated', 'Loading...');
-                        }
-                        if (snapshot.hasError) {
-                          return _buildCard('Revenue Generated', 'Error');
-                        }
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final paymentRemainingSumAsyncValue =
+                            ref.watch(paymentRemainingSumProvider);
 
-                        var Revenue = snapshot.data ?? 0;
-                        return _buildCard('Revenue Generated', '$Revenue');
+                        return paymentRemainingSumAsyncValue.when(
+                          data: (Revenue) {
+                            var revenueInMillions = Revenue / 1000000;
+                            return _buildCard(
+                                'Revenue Generated', '$revenueInMillions M');
+                          },
+                          loading: () =>
+                              _buildCard('Revenue Generated', 'Loading...'),
+                          error: (error, stack) =>
+                              _buildCard('Revenue Generated', 'Error'),
+                        );
                       },
                     ),
-                    FutureBuilder<num>(
-                      future: firestoreHelper.getTotalProfit(),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState ==
-                            ConnectionState.waiting) {
-                          return _buildCard('Profit', 'Loading...');
-                        }
-                        if (snapshot.hasError) {
-                          return _buildCard('Profit', 'Error');
-                        }
+                    Consumer(
+                      builder: (context, ref, child) {
+                        final totalProfitAsyncValue =
+                            ref.watch(totalProfitProvider);
 
-                        num profit = snapshot.data ?? 0;
-                        return _buildCard('Profit', '$profit');
+                        return totalProfitAsyncValue.when(
+                          data: (profit) {
+                            var profitinM = profit / 1000000;
+                            return _buildCard('Profit', '$profitinM M');
+                          },
+                          loading: () => _buildCard('Profit', 'Loading...'),
+                          error: (error, stack) =>
+                              _buildCard('Profit', 'Error'),
+                        );
                       },
                     ),
                   ],
@@ -109,39 +119,36 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               SizedBox(height: 20),
 
-              // Donut Chart
-              FutureBuilder<List<double>>(
-                future: firestoreHelper.getStatusSum(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return _buildCard('Donut Chart', 'Loading...');
-                  }
-                  if (snapshot.hasError) {
-                    return _buildCard('Donut Chart', 'Error');
-                  }
+              Consumer(
+                builder: (context, ref, child) {
+                  final statusSumAsyncValue = ref.watch(statusSumProvider);
 
-                  List<double> statusSum = snapshot.data ?? [0, 0, 0];
-                  return Card(
-                    elevation: 5,
-                    child: Container(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start, // Align text to the left
-                        children: [
-                          Text(
-                            'Paid/Upcoming/Due',
-                            style: TextStyle(
-                              fontSize: 25,
-                              fontWeight: FontWeight.bold,
-                            ),
+                  return statusSumAsyncValue.when(
+                    data: (statusSum) {
+                      return Card(
+                        elevation: 5,
+                        child: Container(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Paid/Upcoming/Due',
+                                style: TextStyle(
+                                  fontSize: 25,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              _buildDonutChart(
+                                  statusSum[0], statusSum[1], statusSum[2]),
+                            ],
                           ),
-                          SizedBox(height: 15),
-                          _buildDonutChart(
-                              statusSum[0], statusSum[1], statusSum[2]),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
+                    loading: () => _buildCard('Donut Chart', 'Loading...'),
+                    error: (error, stack) => _buildCard('Donut Chart', 'Error'),
                   );
                 },
               ),
@@ -163,37 +170,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       SizedBox(height: 10),
-                      FutureBuilder<dynamic>(
-                        future: () async {
-                          final List<num> revenueList =
-                              await firestoreHelper.getRevenueList();
-                          final List<String> months =
-                              await firestoreHelper.getNext5Months();
-                          return {'revenueList': revenueList, 'months': months};
-                        }(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return CircularProgressIndicator();
-                          }
-                          if (snapshot.hasError) {
-                            return Text('Error: ${snapshot.error}');
-                          }
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final revenueListAsyncValue =
+                              ref.watch(revenueListProvider);
+                          final monthsAsyncValue =
+                              ref.watch(next5monthsprovider);
 
-                          List<double> revenueList =
-                              (snapshot.data!['revenueList'] as List<num>)
-                                  .map((value) => value.toDouble())
-                                  .toList();
-                          List<String> months =
-                              snapshot.data!['months'] as List<String>;
-
-                          return _buildBarChart(revenueList, months);
+                          return revenueListAsyncValue.when(
+                            data: (revenueList) => monthsAsyncValue.when(
+                              data: (months) => _buildBarChart(
+                                revenueList
+                                    .map((value) => value.toDouble())
+                                    .toList(),
+                                months,
+                              ),
+                              loading: () => CircularProgressIndicator(),
+                              error: (error, stack) => Text('Error: $error'),
+                            ),
+                            loading: () => CircularProgressIndicator(),
+                            error: (error, stack) => Text('Error: $error'),
+                          );
                         },
                       ),
                     ],
                   ),
                 ),
               ),
+
               SizedBox(height: 20),
 
               Card(
@@ -211,20 +215,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                       SizedBox(height: 10),
-                      FutureBuilder<List<Map<String, dynamic>>>(
-                        future: firestoreHelper.getDayAnddownPaymentData(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return CircularProgressIndicator(); // Or any loading indicator
-                          }
-                          if (snapshot.hasError) {
-                            return Text('Error fetching data');
-                          }
+                      Consumer(
+                        builder: (context, ref, child) {
+                          final dayAndDownPaymentDataAsyncValue =
+                              ref.watch(dayAndDownPaymentDataProvider);
 
-                          List<Map<String, dynamic>> dayAndCostPriceData =
-                              snapshot.data ?? [];
-                          return _buildLineChart(dayAndCostPriceData);
+                          return dayAndDownPaymentDataAsyncValue.when(
+                            data: (dayAndCostPriceData) =>
+                                _buildLineChart(dayAndCostPriceData),
+                            loading: () => CircularProgressIndicator(),
+                            error: (error, stack) =>
+                                Text('Error fetching data: $error'),
+                          );
                         },
                       ),
                     ],
@@ -300,7 +302,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               onPressed: () {
                 // Perform logout actions here (e.g., clear session, navigate to login screen)
                 // For demonstration purposes, let's assume you have a function named logout()
-                logout();
+                logout(context);
                 Navigator.of(context).pop(); // Close the dialog
               },
               child: Text('Yes'),
@@ -317,7 +319,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  void logout() {
+  void logout(BuildContext context) {
     Navigator.pushReplacement(
       context,
       MaterialPageRoute(builder: (context) => LoginPage()),

@@ -9,8 +9,13 @@ class LoginPage extends StatelessWidget {
   TextEditingController passwordController = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+Widget build(BuildContext context) {
+  return GestureDetector(
+    onTap: () {
+      // Dismiss the keyboard when tapping outside of the text field
+      FocusScope.of(context).unfocus();
+    },
+    child: Scaffold(
       resizeToAvoidBottomInset: false,
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -105,6 +110,7 @@ class LoginPage extends StatelessWidget {
           ],
         ),
       ),
+    )
     );
   }
 
@@ -159,12 +165,24 @@ class LoginPage extends StatelessWidget {
       );
     }
   } catch (e) {
-    print("Authentication failed: $e");
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+  print("Authentication failed: $e");
+  showDialog(
+    context: context,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        title: Text("Authentication Failed"),
         content: Text("Incorrect email or password."),
-      ),
-    );
-  }
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(); // Close the dialog
+            },
+            child: Text("OK"),
+          ),
+        ],
+      );
+    },
+  );
+}
 }
 }

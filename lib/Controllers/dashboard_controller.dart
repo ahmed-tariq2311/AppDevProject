@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class FirestoreHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   
-
   Future<int> getTotalCarSold() async {
     // Get the current month and year
     DateTime now = DateTime.now();
@@ -96,6 +95,7 @@ class FirestoreHelper {
     }
     return totalProfit;
   }
+  
   Future<List<double>> getStatusSum() async {
     DateTime now = DateTime.now();
     int currentMonth = now.month;
