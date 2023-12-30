@@ -1,11 +1,12 @@
-import 'package:creditrack/dashboard.dart';
-import 'package:creditrack/login.dart';
-import 'package:creditrack/sales_history.dart';
+import 'package:creditrack/Controllers/add_sale_controller.dart';
+import 'package:creditrack/Views/dashboard_screen.dart';
+import 'package:creditrack/Views/login_screen.dart';
+import 'package:creditrack/Views/sales_history_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'sale_record.dart';
+import '../Models/add_sale_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'widgets.dart';
+import '../Utils/reuseable_widgets.dart';
 
 final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
@@ -46,6 +47,8 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
   TextEditingController modelController = TextEditingController();
   int selectedInstallments = 6; // Default value
   DateTime? currentDate; // Variable to store the current date
+
+  AddSaleController saleFormController = AddSaleController();
 
   @override
   Widget build(BuildContext context) {
@@ -217,7 +220,27 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     ElevatedButton(
-                      onPressed: submitForm,
+                      onPressed: () {
+        // Call the submitForm method from the controller
+        saleFormController.submitForm(
+            context: context,
+            customerNameController: customerNameController,
+            phoneNumberController: phoneNumberController,
+            emailController: emailController,
+            chasisNumberController: chasisNumberController,
+            registrationNumberController: registrationNumberController,
+            carNameController: carNameController,
+            makeController: makeController,
+            modelController: modelController,
+            costPriceController: costPriceController,
+            sellingPriceController: sellingPriceController,
+            profitController: profitController,
+            downPaymentController: downPaymentController,
+            remainingController: RemainingController,
+            installmentAmountController: InstallmentAmountController,
+            selectedInstallments: selectedInstallments,
+        );
+      },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Color.fromARGB(
                             255, 255, 217, 0), // Set the button color to golden
@@ -232,153 +255,6 @@ class _AddRecordScreenState extends State<AddRecordScreen> {
         ),
       ),
       bottomNavigationBar: buildBottomNavigationBar(context),
-    );
-  }
-
-  void submitForm() {
-    // Check if any field is empty
-    if (_areFieldsEmpty()) {
-      _showErrorDialog(context, 'Please fill in all fields.');
-      return;
-    }
-
-    // Capture the current date before storing in Firebase
-    currentDate = DateTime.now();
-
-// Calculate due date (one month after the current date)
-    Timestamp dueDate = currentDate != null
-        ? Timestamp.fromDate(currentDate!.add(Duration(days: 30)))
-        : Timestamp.now();
-
-    // Create a SaleRecord instance
-    SaleRecord saleRecord = SaleRecord(
-      customerName: customerNameController.text,
-      phoneNumber: phoneNumberController.text,
-      email: emailController.text,
-      chasisNumber: chasisNumberController.text,
-      registrationNumber: registrationNumberController.text,
-      carName: carNameController.text,
-      make: makeController.text,
-      model: modelController.text,
-      costPrice: double.tryParse(costPriceController.text) ?? 0,
-      sellingPrice: double.tryParse(sellingPriceController.text) ?? 0,
-      profit: double.tryParse(profitController.text) ?? 0,
-      selectedInstallments: selectedInstallments,
-      downPayment: double.tryParse(downPaymentController.text) ?? 0,
-      paymentRemaining: double.tryParse(RemainingController.text) ?? 0,
-      installmentAmount: double.tryParse(InstallmentAmountController.text) ?? 0,
-      submitDate:
-          Timestamp.fromDate(currentDate!), // Convert DateTime to Timestamp
-      dueDate: dueDate, // Convert DateTime to Timestamp
-      status: "PAID",
-      daysRemaining: 30, // Set the "status" to "PAID"
-    );
-
-    // Convert SaleRecord instance to JSON
-    Map<String, dynamic> jsonData = saleRecord.toJson();
-
-    // Push the data to Firebase under 'sales' node
-    _firestore.collection('sales').add(jsonData).then((value) {
-      // Show a success pop-up
-      _showSuccessDialog(context, 'Record Successfully Added');
-
-      // Reset the form
-      resetForm();
-      print('Form submitted on: $currentDate');
-    }).catchError((error) {
-      print('Error submitting form: $error');
-    });
-  }
-
-  void resetForm() {
-    // Clear all text controllers and reset other state variables
-    customerNameController.clear();
-    phoneNumberController.clear();
-    soldAtController.clear();
-    downPaymentController.clear();
-    costPriceController.clear();
-    sellingPriceController.clear();
-    profitController.clear();
-    RemainingController.clear();
-    InstallmentAmountController.clear();
-    emailController.clear();
-    chasisNumberController.clear();
-    registrationNumberController.clear();
-    carNameController.clear();
-    makeController.clear();
-    modelController.clear();
-    // Set default values for other state variables if needed
-    selectedInstallments = 6;
-  }
-
-  bool _areFieldsEmpty() {
-    // Check if any of the text controllers are empty
-    return customerNameController.text.isEmpty ||
-        phoneNumberController.text.isEmpty ||
-        emailController.text.isEmpty ||
-        chasisNumberController.text.isEmpty ||
-        registrationNumberController.text.isEmpty ||
-        carNameController.text.isEmpty ||
-        makeController.text.isEmpty ||
-        modelController.text.isEmpty ||
-        costPriceController.text.isEmpty ||
-        sellingPriceController.text.isEmpty ||
-        profitController.text.isEmpty ||
-        downPaymentController.text.isEmpty ||
-        RemainingController.text.isEmpty ||
-        InstallmentAmountController.text.isEmpty;
-  }
-
-  void _showErrorDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Error'),
-          content: Text(message),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the alert dialog
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _showSuccessDialog(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Success'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min, // Set the size to minimum
-            children: [
-              Padding(
-                padding: const EdgeInsets.all(10.0), // Adjust padding as needed
-                child: Image.asset(
-                  'assets/success.png',
-                  width: 100,
-                  height: 100,
-                ),
-              ),
-              Text(message),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop(); // Close the alert dialog
-              },
-              child: Text('OK'),
-            ),
-          ],
-        );
-      },
     );
   }
 

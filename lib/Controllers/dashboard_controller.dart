@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class FirestoreHelper {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  
 
   Future<int> getTotalCarSold() async {
     // Get the current month and year
@@ -61,7 +62,6 @@ class FirestoreHelper {
         in querySnapshot.docs) {
       paymentRemainingSum += doc['paymentRemaining'] ?? 0;
     }
-
     return paymentRemainingSum;
   }
 
@@ -94,10 +94,8 @@ class FirestoreHelper {
         in querySnapshot.docs) {
       totalProfit += doc['profit'] ?? 0;
     }
-
     return totalProfit;
   }
-
   Future<List<double>> getStatusSum() async {
     DateTime now = DateTime.now();
     int currentMonth = now.month;
@@ -133,7 +131,6 @@ class FirestoreHelper {
       if (submitDate.month != currentMonth) {
         continue; // Skip documents with a different month
       }
-
       // Process the document based on its "status" field
       String status = doc['status'] ?? '';
 
@@ -150,7 +147,6 @@ class FirestoreHelper {
         // Handle other status values if needed
       }
     }
-
     return [dueSum, upcomingSum, paidSum];
   }
 
@@ -287,12 +283,9 @@ class FirestoreHelper {
       revenueList[5] += installmentAmount;
     }
 
-    // Add more conditions if needed for the remaining indices in the list
-    // Example: if (selectedInstallments > 3), revenueList[3] += installmentAmount;
   }
-
   return revenueList;
 }
+  
 
 }
-

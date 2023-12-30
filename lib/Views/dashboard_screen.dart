@@ -1,9 +1,9 @@
-import 'package:creditrack/add_sale.dart';
-import 'package:creditrack/sales_history.dart';
-import 'firestoreHelper.dart';
+import 'package:creditrack/Views/add_sale_screen.dart';
+import 'package:creditrack/Views/sales_history_screen.dart';
+import '../Controllers/dashboard_controller.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'login.dart';
+import 'login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   @override
@@ -85,7 +85,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                           return _buildCard('Revenue Generated', 'Error');
                         }
 
-                        num Revenue = snapshot.data ?? 0;
+                        var Revenue = snapshot.data ?? 0;
                         return _buildCard('Revenue Generated', '$Revenue');
                       },
                     ),

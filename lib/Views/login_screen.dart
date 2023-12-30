@@ -1,6 +1,4 @@
-// import 'package:creditrack/dashboard.dart';
-import 'package:creditrack/add_sale.dart';
-import 'package:creditrack/dashboard.dart';
+import 'package:creditrack/Views/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -18,16 +16,6 @@ class LoginPage extends StatelessWidget {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.white,
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pop(context);
-          },
-          icon: Icon(
-            Icons.arrow_back_ios,
-            size: 20,
-            color: const Color.fromARGB(255, 0, 0, 0),
-          ),
-        ),
         systemOverlayStyle: SystemUiOverlayStyle.dark,
       ),
       body: Container(

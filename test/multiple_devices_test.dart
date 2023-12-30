@@ -3,9 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:golden_toolkit/golden_toolkit.dart';
-import 'package:creditrack/dashboard.dart';
-import 'package:creditrack/add_sale.dart';
-import 'package:creditrack/sales_history.dart';
+import 'package:creditrack/Views/dashboard_screen.dart';
+import 'package:creditrack/Views/add_sale_screen.dart';
+import 'package:creditrack/Views/sales_history_screen.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

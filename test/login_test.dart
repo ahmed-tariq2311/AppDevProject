@@ -1,9 +1,9 @@
-import 'package:creditrack/dashboard.dart';
+import 'package:creditrack/Views/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:creditrack/main.dart' as app; // Replace with your app's import
-import 'package:creditrack/login.dart'; // Import your LoginPage
+import 'package:creditrack/Views/login_screen.dart'; // Import your LoginPage
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();

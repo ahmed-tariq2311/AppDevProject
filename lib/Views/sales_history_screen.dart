@@ -1,9 +1,10 @@
-import 'package:creditrack/add_sale.dart';
-import 'package:creditrack/dashboard.dart';
+import 'package:creditrack/Views/add_sale_screen.dart';
+import 'package:creditrack/Views/dashboard_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
-import 'login.dart';
+import 'login_screen.dart';
+import 'package:creditrack/Models/sales_history_model.dart';
 
 class SalesHistoryScreen extends StatefulWidget {
   @override
@@ -18,29 +19,12 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
     return DateFormat('yyyy-MM-dd HH:mm:ss').format(timestamp.toDate());
   }
 
-  List<Map<String, dynamic>> _dueRecords = []; // List to store 'DUE' records
-
-  @override
+ @override
   void initState() {
     super.initState();
-    _salesStream = FirebaseFirestore.instance.collection('sales').snapshots();
-    _fetchDueRecords(); // Fetch due records only once during screen initialization
-  }
-
-  Future<void> _fetchDueRecords() async {
-    try {
-      final QuerySnapshot<Map<String, dynamic>> dueRecordsSnapshot =
-          await FirebaseFirestore.instance
-              .collection('sales')
-              .where('status', isEqualTo: 'DUE')
-              .get();
-
-      setState(() {
-        _dueRecords = dueRecordsSnapshot.docs.map((doc) => doc.data()).toList();
-      });
-    } catch (e) {
-      print('Error fetching due records: $e');
-    }
+    _salesStream = FirebaseFirestore.instance
+        .collection('sales')
+        .snapshots(); // Remove the .map() part
   }
 
   @override
@@ -56,10 +40,7 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
               color: Color.fromARGB(255, 204, 201, 9),
             ),
             iconSize: 30.0,
-            onPressed: () {
-              // Open the drawer using the Builder's context
-              Scaffold.of(context).openDrawer();
-            },
+            onPressed: () {},
           ),
         ),
         actions: [
@@ -76,116 +57,84 @@ class _SalesHistoryScreenState extends State<SalesHistoryScreen> {
           ),
         ],
       ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
-          children: [
-            DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color.fromARGB(255, 243, 33, 33),
+      body: SingleChildScrollView(
+        child: Container(
+          color: Colors.lightBlue,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Search Bar
+              buildSearchBar(),
+
+              // Display the sales history content
+              StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
+                stream: _salesStream,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  }
+
+                  if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  }
+
+                  if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
+                    return Center(
+                      child: Text('No sales records available.'),
+                    );
+                  }
+
+                  // Use the map() method to convert QueryDocumentSnapshot to SaleRecord
+                  List<SaleRecord> salesList = snapshot.data!.docs
+                      .map((doc) => SaleRecord.fromFirestore(doc))
+                      .toList();
+
+                  // Filtered list of sales records
+                  List<SaleRecord> filteredSales = salesList
+                      .where((saleData) => _isSearchMatch(saleData.toJson()))
+                      .toList();
+
+                  // Display the list of sales records or a no records message
+                  if (filteredSales.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Image.asset(
+                            'assets/noRecord.png',
+                            width: 150,
+                            height: 150,
+                          ),
+                          SizedBox(height: 20),
+                          Text(
+                            'No Record found',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 24,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  } else {
+                    return ListView.builder(
+                      shrinkWrap: true,
+                      physics: NeverScrollableScrollPhysics(),
+                      itemCount: filteredSales.length,
+                      itemBuilder: (context, index) {
+                        var saleData = filteredSales[index];
+                        var documentId = snapshot.data!.docs[index].id;
+                        return _buildSaleRecordItem(saleData, documentId);
+                      },
+                    );
+                  }
+                },
               ),
-              child: Text(
-                'Due Records',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 35,
-                ),
-              ),
-            ),
-            // Display 'DUE' records in a list
-            for (var record in _dueRecords) ...[
-              ListTile(
-                title: Text(record['customerName']),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Car Name: ${record['carName']}'),
-                    Text('Due Date: ${formatTimestamp(record['dueDate'])}'),
-                    Text('Installment Amount: ${record['installmentAmount']}'),
-                  ],
-                ),
-                // You can customize the ListTile as needed
-              ),
-              Divider(),
             ],
-          ],
+          ),
         ),
       ),
-body: SingleChildScrollView(
-  child: Container(
-    color: Colors.lightBlue,
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Search Bar
-        buildSearchBar(),
-
-        // Display the sales history content
-        StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
-          stream: _salesStream,
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasError) {
-              return Text('Error: ${snapshot.error}');
-            }
-
-            if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-              return Center(
-                child: Text('No sales records available.'),
-              );
-            }
-
-            // Filtered list of sales records
-            List<Map<String, dynamic>> filteredSales = snapshot
-                .data!.docs
-                .map((doc) => doc.data())
-                .where((saleData) => _isSearchMatch(saleData))
-                .toList();
-
-            // Display the list of sales records or a no records message
-            if (filteredSales.isEmpty) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Image.asset(
-                      'assets/noRecord.png',
-                      width: 150,
-                      height: 150,
-                    ),
-                    SizedBox(height: 20),
-                    Text(
-                      'No Record found',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 24,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return ListView.builder(
-                shrinkWrap: true,
-                physics: NeverScrollableScrollPhysics(),
-                itemCount: filteredSales.length,
-                itemBuilder: (context, index) {
-                  var saleData = filteredSales[index];
-                  var documentId = snapshot.data!.docs[index].id;
-                  return _buildSaleRecordItem(saleData, documentId);
-                },
-              );
-            }
-          },
-        ),
-      ],
-    ),
-  ),
-),
       bottomNavigationBar: BottomNavigationBar(
         items: [
           BottomNavigationBarItem(
@@ -284,7 +233,7 @@ body: SingleChildScrollView(
     });
   }
 
-  void _showBottomSheet(Map<String, dynamic> saleData, String documentId) {
+  void _showBottomSheet(SaleRecord saleData, String documentId) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true, // Set to true for full-height modal
@@ -311,15 +260,15 @@ body: SingleChildScrollView(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "Customer Name: ${saleData['customerName']}",
+                            "Customer Name: ${saleData.carName}",
                             style: TextStyle(fontSize: 16),
                           ),
                           Text(
-                            "Phone Number: ${saleData['phoneNumber']}",
+                            "Phone Number: ${saleData.phoneNumber}",
                             style: TextStyle(fontSize: 16),
                           ),
                           Text(
-                            "Email: ${saleData['email']}",
+                            "Email: ${saleData.email}",
                             style: TextStyle(fontSize: 16),
                           )
                         ],
@@ -342,14 +291,14 @@ body: SingleChildScrollView(
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("Car Name: ${saleData['carName']}"),
+                          Text("Car Name: ${saleData.carName}"),
                           Text(
-                              "Installment Amount: ${saleData['installmentAmount']}"),
+                              "Installment Amount: ${saleData.installmentAmount}"),
                           Text(
-                              "Payment Remaining: ${saleData['paymentRemaining']}"),
+                              "Payment Remaining: ${saleData.paymentRemaining}"),
                           Text(
-                              "Selected Installments: ${saleData['selectedInstallments']}"),
-                          Text("Profit: ${saleData['profit']}"),
+                              "Selected Installments: ${saleData.selectedInstallments}"),
+                          Text("Profit: ${saleData.profit}"),
                         ],
                       ),
                     ],
@@ -367,7 +316,8 @@ body: SingleChildScrollView(
                         height: 60,
                         onPressed: () {
                           _showDeleteConfirmationDialog(documentId);
-                          _buildSaleRecordItem(saleData, documentId);
+                          _buildSaleRecordItem(
+                              saleData, documentId);
                         },
                         color: Colors.redAccent,
                         elevation: 0,
@@ -390,10 +340,11 @@ body: SingleChildScrollView(
                         onPressed: () {
                           _showConfirmationDialog(
                             documentId,
-                            saleData['selectedInstallments'],
-                            saleData['dueDate'],
+                            saleData.selectedInstallments,
+                            saleData.dueDate,
                           );
-                          _buildSaleRecordItem(saleData, documentId);
+                          _buildSaleRecordItem(
+                              saleData as SaleRecord, documentId);
                         },
                         color: Colors.greenAccent,
                         elevation: 0,
@@ -453,10 +404,9 @@ body: SingleChildScrollView(
     // You may want to add error handling here
   }
 
-  Widget _buildSaleRecordItem(
-      Map<String, dynamic> saleData, String documentId) {
+  Widget _buildSaleRecordItem(SaleRecord saleData, String documentId) {
     // Parse the dueDate from the saleData
-    Timestamp dueDate = saleData['dueDate'];
+    Timestamp dueDate = saleData.dueDate;
     // Convert Timestamp objects to DateTime objects
     DateTime currentDate = DateTime.now();
     DateTime dueDateTime = dueDate.toDate(); // Convert Timestamp to DateTime
@@ -497,7 +447,7 @@ body: SingleChildScrollView(
 
     return InkWell(
       onTap: () {
-        _showBottomSheet(saleData, documentId);
+        _showBottomSheet( saleData, documentId);
       },
       child: Container(
         margin: EdgeInsets.all(10.0),
@@ -545,21 +495,21 @@ body: SingleChildScrollView(
                 children: [
                   // 3. Car Name
                   Text(
-                    "Car Name: ${saleData['carName']}",
+                    "Car Name: ${saleData.carName}",
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 5),
 
                   // 4. Installment Amount
                   Text(
-                    "Installment Amount: ${saleData['installmentAmount']}",
+                    "Installment Amount: ${saleData.installmentAmount}",
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 5),
 
                   // 5. Remaining Installments
                   Text(
-                    "Remaining Installments: ${saleData['selectedInstallments']}",
+                    "Remaining Installments: ${saleData.selectedInstallments}",
                     style: TextStyle(fontSize: 16),
                   ),
                   SizedBox(height: 5),

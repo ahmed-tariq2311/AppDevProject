@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'add_sale.dart';
-import 'dashboard.dart';
-import 'sales_history.dart';
+import '../Views/add_sale_screen.dart';
+import '../Views/dashboard_screen.dart';
+import '../Views/sales_history_screen.dart';
 
 Widget buildStyledContainer(Widget child) {
   return Container(
